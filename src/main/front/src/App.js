@@ -1,38 +1,27 @@
-import logo from './logo.svg';
-import './App.css';
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import React from 'react';
+import { Routes, Route, Navigate} from 'react-router-dom';
+import LoginPage from './pages/LoginPage';
+import SignUpPage from './pages/SignUpPage';
+
+const PrivateRoute = ({ children }) => {
+    const userInfo = localStorage.getItem('userInfo');
+    return userInfo ? children : <Navigate to="/" />;
+};
+
+const PublicRoute = ({ children }) => {
+    const userInfo = localStorage.getItem('userInfo');
+    return userInfo ? <Navigate to="/index" /> : children; // userInfo가 있으면 메인 페이지로, 없으면 자식 컴포넌트를 리턴
+};
 
 function App() {
-
-    useEffect(() => {
-        axios.get('http://localhost:8080/api/hello')
-            .then(response => {
-                console.log(response.data);
-            })
-            .catch(error => {
-                console.log(error.data);
-            });
-    }, []); // 빈 배열은 컴포넌트가 처음 렌더링될 때 한 번만 실행됨
-
     return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+        <div className="App">
+            <Routes>
+                <Route path="/" element={<PublicRoute><LoginPage /></PublicRoute>} />
+                <Route path="/signup" element={<PublicRoute><SignUpPage /></PublicRoute>} />
+                <Route path="/index" element={<PrivateRoute></PrivateRoute>} />
+            </Routes>
+        </div>
+    );
 }
-
 export default App;

@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api")
 public class HomeController {
 
-    @GetMapping("/hello")
+    @GetMapping("/EmailCheck")
     public ResponseEntity<?> test(){
-        System.out.println("안녕");
+
         return ResponseEntity.ok("안녕");
     }
 }
