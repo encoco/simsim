@@ -1,12 +1,29 @@
 import React, { useState } from 'react';
+import axios from "axios";
 
 function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log('로그인 시도:', email, password);
+        const params = new URLSearchParams();
+        params.append('email', email);
+        params.append('password', password);
+
+        axios.post('/api/login', params)
+            .then(response => {
+                alert("반갑습니다!");
+            })
+            .catch(error => {
+                e.preventDefault();
+                if (error.response) {
+                    if (error.response.status === 401) {
+                        alert('계정 정보를 확인해주세요.');
+                    } else {
+                        alert('다시 시도해주세요.');
+                    }
+                }
+            });
     };
 
     return (

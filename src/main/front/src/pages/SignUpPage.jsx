@@ -1,37 +1,64 @@
 import React, {useState} from 'react';
+import { useNavigate} from 'react-router-dom';
 import axios from "axios";
 
 function SignUpPage() {
+    const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [nickname, setNickname] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isEmailChecked, setIsEmailChecked] = useState(false);
+    const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
+    /*이메일 중복 검사 및 정규표현식*/
+    const isValidEmail = (email) => {
+        // 이메일 정규 표현식
+        const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return regex.test(email);
+    };
+
+    const handleEmailCheck = () => {
+        if (!isValidEmail(email)) {
+            alert('올바른 이메일 주소를 입력하세요.');
+            return;
+        }
+        axios.post('/api/EmailCheck', { email })
+            .then(response => {
+                alert('이메일 사용 가능');
+                setIsEmailChecked(true);
+            })
+            .catch(error => {
+                alert("이미 사용중인 이메일입니다.");
+            });
+    };
+
+    /*로그인 및 검사*/
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!passwordPattern.test(password)) {
+            alert('비밀번호는 최소 8자 이상이어야 하며 소문자, 숫자, 특수 문자를 포함해야 합니다.');
+            return;
+        }
+
         if (password !== confirmPassword) {
             alert('비밀번호가 일치하지 않습니다.');
             return;
         }
+
         if (!isEmailChecked) {
             alert('이메일 중복 확인을 해주세요.');
             return;
         }
-        console.log('회원가입 시도:', username, nickname, email, password);
-    };
-
-    const handleEmailCheck = () => {
-        setIsEmailChecked(true);
-        axios.get('http://localhost:8080/api/EmailCheck')
+        axios.post('/api/signUp', { username,nickname,email,password })
             .then(response => {
-                console.log(response.data);
+                alert("로그인해주세요.")
+                //navigate('/');
             })
             .catch(error => {
                 console.log(error.data);
             });
-        alert('이메일 사용 가능');
     };
 
     return (
@@ -61,6 +88,7 @@ function SignUpPage() {
                                 onChange={(e) => setUsername(e.target.value)}
                             />
                         </div>
+
                         <div>
                             <label htmlFor="nickname" className="sr-only">
                                 닉네임
@@ -77,6 +105,7 @@ function SignUpPage() {
                                 onChange={(e) => setNickname(e.target.value)}
                             />
                         </div>
+
                         <div className="flex">
                             <input
                                 id="email-address"
@@ -92,6 +121,7 @@ function SignUpPage() {
                                     setIsEmailChecked(false);
                                 }}
                             />
+
                             <button
                                 type="button"
                                 onClick={handleEmailCheck}
@@ -101,7 +131,7 @@ function SignUpPage() {
                             </button>
                         </div>
                         <div>
-                            <label htmlFor="password" className="sr-only">
+                        <label htmlFor="password" className="sr-only">
                                 비밀번호
                             </label>
                             <input
