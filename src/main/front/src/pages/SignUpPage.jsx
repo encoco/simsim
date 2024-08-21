@@ -1,15 +1,19 @@
 import React, {useState} from 'react';
 import { useNavigate} from 'react-router-dom';
 import axios from "axios";
+import {type} from "@testing-library/user-event/dist/type";
 
 function SignUpPage() {
     const navigate = useNavigate();
     const [username, setUsername] = useState('');
     const [nickname, setNickname] = useState('');
     const [email, setEmail] = useState('');
+    const [verificationCode, setVerificationCode] = useState('');
+    const [emailCode, setEmailCode] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [isEmailChecked, setIsEmailChecked] = useState(false);
+    const [isEmailChecked, setIsEmailChecked] = useState(false); // 이메일 인증 여부
+    const [isEmailVerified, setIsEmailVerified] = useState(false); // 이메일 인증 완료 여부
     const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
     /*이메일 중복 검사 및 정규표현식*/
@@ -19,19 +23,31 @@ function SignUpPage() {
         return regex.test(email);
     };
 
-    const handleEmailCheck = () => {
+    //중복확인 눌렀을때
+    const handleSendMail = () => {
         if (!isValidEmail(email)) {
             alert('올바른 이메일 주소를 입력하세요.');
             return;
         }
+        setIsEmailChecked(true);
         axios.post('/api/EmailCheck', { email })
             .then(response => {
-                alert('이메일 사용 가능');
-                setIsEmailChecked(true);
+                alert('이메일 전송 완료');
+                setEmailCode(response.data);
             })
             .catch(error => {
                 alert("이미 사용중인 이메일입니다.");
             });
+    };
+    
+    //이메일 인증번호 확인 눌렀을 때
+    const handleEmailCheck = () => {
+        if(isEmailChecked && verificationCode=== emailCode.toString()){
+            alert("인증 완료");
+            setIsEmailVerified(true);
+        }else if(!isEmailChecked) {
+            alert("중복 확인을 다시 해주세요.");
+        }else alert("인증 번호가 다릅니다.");
     };
 
     /*로그인 및 검사*/
@@ -41,12 +57,10 @@ function SignUpPage() {
             alert('비밀번호는 최소 8자 이상이어야 하며 소문자, 숫자, 특수 문자를 포함해야 합니다.');
             return;
         }
-
         if (password !== confirmPassword) {
             alert('비밀번호가 일치하지 않습니다.');
             return;
         }
-
         if (!isEmailChecked) {
             alert('이메일 중복 확인을 해주세요.');
             return;
@@ -118,20 +132,46 @@ function SignUpPage() {
                                 value={email}
                                 onChange={(e) => {
                                     setEmail(e.target.value);
-                                    setIsEmailChecked(false);
+                                    if (!isEmailVerified) {
+                                        setIsEmailChecked(false); // 인증 완료 전에는 이메일 변경 시 인증 상태를 초기화
+                                    }
                                 }}
+                                disabled={isEmailVerified} // 인증 완료 시 이메일 필드를 비활성화
                             />
 
                             <button
                                 type="button"
-                                onClick={handleEmailCheck}
+                                onClick={handleSendMail}
                                 className="ml-2 w-1/3 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                                 중복 확인
                             </button>
                         </div>
+
+                        {!isEmailVerified && (
+                            <div className="flex">
+                                <input
+                                    id="verification-code"
+                                    name="verificationCode"
+                                    type="number"
+                                    required
+                                    className="appearance-none rounded-none relative block w-2/3 px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                    placeholder="인증번호 입력"
+                                    value={verificationCode}
+                                    onChange={(e) => setVerificationCode(e.target.value)}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleEmailCheck}
+                                    className="ml-2 w-1/3 px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                    disabled={isEmailVerified} // 이메일 인증 후 버튼 비활성화
+                                >
+                                    확인
+                                </button>
+                            </div>
+                        )}
                         <div>
-                        <label htmlFor="password" className="sr-only">
+                            <label htmlFor="password" className="sr-only">
                                 비밀번호
                             </label>
                             <input

@@ -1,6 +1,7 @@
 package com.example.project.Controller;
 
 import com.example.project.DTO.UserDTO;
+import com.example.project.Service.MailService;
 import com.example.project.Service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final MailService mailService;
 
     @PostMapping("/EmailCheck")
     public ResponseEntity<?> test(@RequestBody UserDTO user){
@@ -21,14 +23,14 @@ public class UserController {
             System.out.println("중복");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("중복");
         }else{
-            System.out.println("비중복");
-            return ResponseEntity.ok("비중복");
+            String verification = mailService.sendVerificationEmail(user.getEmail());
+            System.out.println(verification);
+            return ResponseEntity.ok(verification);
         }
     }
 
     @PostMapping("/signUp")
     public ResponseEntity<?> signUp(@RequestBody UserDTO user){
-        System.out.println("hgihihi");
         if(userService.signUp(user)){
             return ResponseEntity.ok("완료");
         }else return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("다시 시도해주세요");
@@ -36,7 +38,6 @@ public class UserController {
 
     @GetMapping("/Logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
-        System.out.println("ㅗㅑ");
         Cookie refreshTokenCookie = new Cookie("refreshToken", null); // 쿠키 이름을 refreshToken으로 변경
         refreshTokenCookie.setMaxAge(0); // 쿠키의 만료 시간을 0으로 설정하여 즉시 만료
         refreshTokenCookie.setPath("/"); // 모든 경로에서 유효한 쿠키로 설정
