@@ -54,7 +54,7 @@ function SignUpPage() {
         axios.post('/api/signUp', { username,nickname,email,password })
             .then(response => {
                 alert("로그인해주세요.")
-                //navigate('/');
+                navigate('/');
             })
             .catch(error => {
                 console.log(error.data);

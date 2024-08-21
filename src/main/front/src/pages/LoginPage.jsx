@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
+import { useNavigate} from 'react-router-dom';
 import axios from "axios";
 
 function LoginPage() {
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
     const handleSubmit = (e) => {
+        e.preventDefault();
         const params = new URLSearchParams();
         params.append('email', email);
         params.append('password', password);
 
         axios.post('/api/login', params)
             .then(response => {
-                alert("반갑습니다!");
+                localStorage.setItem("token",response.data);
+                navigate('/main');
             })
             .catch(error => {
-                e.preventDefault();
                 if (error.response) {
                     if (error.response.status === 401) {
                         alert('계정 정보를 확인해주세요.');
