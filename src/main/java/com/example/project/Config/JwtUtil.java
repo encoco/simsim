@@ -40,5 +40,19 @@ public class JwtUtil {
                 .signWith(this.getSigningKey())
                 .compact();
     }
-
+    public Boolean isExpired(String token) {
+        try {
+            // JWT의 만료 시간을 가져와 현재 시간과 비교하여 만료 여부 확인
+            return Jwts.parser().
+                    verifyWith(getSigningKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getExpiration()
+                    .before(new Date());
+        } catch (Exception e) {
+            // JWT가 만료되었거나 파싱 중 오류가 발생하면 false 반환
+            return false;
+        }
+    }
 }

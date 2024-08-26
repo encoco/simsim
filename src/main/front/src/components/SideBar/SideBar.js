@@ -1,17 +1,20 @@
 import {Link, useNavigate} from "react-router-dom";
 import { FaHome, FaCommentAlt, FaList, FaUserCog, FaCreditCard, FaSignOutAlt, FaCoins } from 'react-icons/fa';
 import axios from "axios";
+import api from '../../api';
 
 const SideBar = () => {
     const navigate = useNavigate();
 
     const logout = async () => {
         try {
-            await axios.get('/api/Logout', {
+            const response = api.get("/api/test",{withCredentials:true});
+            /*await axios.get('/api/Logout', {
                 withCredentials: true
             });
+
             localStorage.removeItem('token'); // 로컬 스토리지에서 사용자 정보 제거
-            navigate('/');
+            navigate('/');*/
         } catch (error) {
             console.error('로그아웃 오류', error);
         }

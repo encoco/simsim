@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import { useNavigate} from 'react-router-dom';
 import axios from "axios";
-import {type} from "@testing-library/user-event/dist/type";
+import api from '../api';
 
 function SignUpPage() {
     const navigate = useNavigate();
@@ -30,7 +30,7 @@ function SignUpPage() {
             return;
         }
         setIsEmailChecked(true);
-        axios.post('/api/EmailCheck', { email })
+        api.post('/api/EmailCheck', { email })
             .then(response => {
                 alert('이메일 전송 완료');
                 setEmailCode(response.data);

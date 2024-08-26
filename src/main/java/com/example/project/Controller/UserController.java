@@ -45,4 +45,10 @@ public class UserController {
 
         return new ResponseEntity<>("You've been logged out successfully.", HttpStatus.OK);
     }
+
+    @GetMapping("/test")
+    public ResponseEntity<?> test(){
+        System.out.println("test");
+        return ResponseEntity.ok("hi");
+    }
 }

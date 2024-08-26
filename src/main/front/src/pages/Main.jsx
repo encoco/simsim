@@ -2,6 +2,7 @@ import React, {useState, useEffect} from 'react';
 import { FaChevronLeft,  FaChevronRight, FaHeart} from 'react-icons/fa';
 import axios from "axios";
 import SideBar from "../components/SideBar/SideBar";
+import api from '../api';
 
 const Main = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
