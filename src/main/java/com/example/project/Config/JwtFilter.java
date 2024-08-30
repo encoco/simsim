@@ -29,7 +29,8 @@ public class JwtFilter extends GenericFilterBean {
         String requestURI = httpRequest.getRequestURI();
         System.out.println("URI : " + requestURI);
 
-        if (requestURI.startsWith("/api/ws")) {
+        if (requestURI.startsWith("/api/ws") || requestURI.startsWith("/api/login") || requestURI.startsWith("/api/logout")
+              ||requestURI.startsWith("/api/EmailCheck")) {
             chain.doFilter(request, response);
             return;
         }
