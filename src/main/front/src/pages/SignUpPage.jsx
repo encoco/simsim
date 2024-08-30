@@ -30,7 +30,7 @@ function SignUpPage() {
             return;
         }
         setIsEmailChecked(true);
-        api.post('/api/EmailCheck', { email })
+        api.post('/api/auth/EmailCheck', { email })
             .then(response => {
                 alert('이메일 전송 완료');
                 setEmailCode(response.data);
@@ -65,7 +65,7 @@ function SignUpPage() {
             alert('이메일 중복 확인을 해주세요.');
             return;
         }
-        axios.post('/api/signUp', { username,nickname,email,password })
+        axios.post('/api/auth/signUp', { username,nickname,email,password })
             .then(response => {
                 alert("로그인해주세요.")
                 navigate('/');

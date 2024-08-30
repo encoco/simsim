@@ -13,9 +13,9 @@ function LoginPage() {
         params.append('email', email);
         params.append('password', password);
 
-        axios.post('/api/login', params)
+        axios.post('/api/auth/login', params)
             .then(response => {
-                localStorage.setItem("token",response.data);
+                localStorage.setItem('token',response.data);
                 navigate('/main');
             })
             .catch(error => {

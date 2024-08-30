@@ -8,36 +8,72 @@ const api = axios.create({
     }
 });
 
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+function onRrefreshed(token) {
+    refreshSubscribers.map(cb => cb(token));
+    refreshSubscribers = [];
+}
+
+function subscribeTokenRefresh(cb) {
+    refreshSubscribers.push(cb);
+}
+
 // 요청 인터셉터 설정
 api.interceptors.request.use(
     config => {
-        // 요청을 보내기 전에 수행할 작업
-        // 예: 토큰을 헤더에 추가
         const token = localStorage.getItem('token');
-        console.log(token);
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
     },
     error => {
-        // 요청 오류가 발생했을 때 작업
         return Promise.reject(error);
     }
 );
 
 // 응답 인터셉터 설정
 api.interceptors.response.use(
-    response => {
-        // 응답 데이터를 가공하거나 로그를 남길 수 있음
-        return response;
-    },
-    error => {
-        // 응답 오류가 발생했을 때 작업
-        // 예: 인증 오류 처리
-        if (error.response && error.response.status === 401) {
-            // 예: 로그인 페이지로 리다이렉트
-            window.location.href = '/login';
+    response => response,
+    async (error) => {
+        const originalRequest = error.config;
+        if (error.response.status === 401 && !originalRequest._retry) {
+            if (isRefreshing) {
+                return new Promise((resolve) => {
+                    subscribeTokenRefresh(token => {
+                        originalRequest.headers['Authorization'] = 'Bearer ' + token;
+                        resolve(api(originalRequest));
+                    });
+                });
+            }
+
+            originalRequest._retry = true;
+            isRefreshing = true;
+
+            try {
+                const { data } = await axios.post('/api/refreshToken', {}, { withCredentials: true });
+                console.log("response data : ", data);
+                localStorage.setItem('token', data);
+                onRrefreshed(data);
+                originalRequest.headers['Authorization'] = `Bearer ${data}`;
+                return api(originalRequest);
+            } catch (refreshError) {
+                try {
+                    axios.get('/api/auth/Logout', {
+                        withCredentials: true
+                    });
+                    localStorage.removeItem('token');
+                    window.location.reload();
+                    alert("다시 로그인해주세요.");
+                } catch (error) {
+                    alert('다시 시도해주세요.');
+                }
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+            }
         }
         return Promise.reject(error);
     }
