@@ -4,7 +4,7 @@ import axios from "axios";
 import SideBar from "../components/SideBar/SideBar";
 import api from '../api';
 
-const Main = () => {
+function Main(){
     const [currentIndex, setCurrentIndex] = useState(0);
     const popularUsers = [
         {

@@ -1,7 +1,6 @@
 package com.example.project.Config.Auth;
 
-import com.example.project.Config.JwtUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.project.Config.JWT.JwtUtil;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -14,8 +13,6 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -35,8 +32,6 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
 
         String accessToken = jwtUtil.generateToken(userDetails, accessExpirationTime); // Access Token 생성
         String refreshToken = jwtUtil.generateToken(userDetails, refreshExpirationTime); // Refresh Token 생성
-        System.out.println("access : " + accessToken);
-        System.out.println("refresh : " + refreshToken);
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken).httpOnly(true).path("/").build();
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());

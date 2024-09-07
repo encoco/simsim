@@ -14,8 +14,5 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
                                         AuthenticationException exception) throws IOException, ServletException {
         System.out.println("로그인실패");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 상태 코드 설정
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        //response.getWriter().write("{\"error\": \"Authentication failed\", \"message\": \"" + exception.getMessage() + "\"}");
     }
 }

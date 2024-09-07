@@ -13,6 +13,7 @@ public class UserDTO {
     String username;
     String nickname;
     String email;
+    String profile_img;
     String password;
 
     @Builder.Default

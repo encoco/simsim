@@ -17,6 +17,7 @@ public class UserEntity {
     int id;
     String username;
     String nickname;
+    String profile_img;
     String email;
     String password;
 

@@ -18,6 +18,7 @@ function LoginPage() {
                 localStorage.setItem('token',response.data);
                 navigate('/main');
             })
+
             .catch(error => {
                 if (error.response) {
                     if (error.response.status === 401) {
