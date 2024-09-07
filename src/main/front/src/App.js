@@ -4,6 +4,7 @@ import LoginPage from './pages/LoginPage';
 import SignUpPage from './pages/SignUpPage';
 import Main from './pages/Main';
 import Setting from './pages/Settings';
+import RandomChat from './pages/RandomChat';
 
 const PrivateRoute = ({ children }) => {
     const userInfo = localStorage.getItem('token');
@@ -23,6 +24,7 @@ function App() {
                 <Route path="/signup" element={<PublicRoute><SignUpPage /></PublicRoute>} />
                 <Route path="/main" element={<PrivateRoute><Main /></PrivateRoute>} />
                 <Route path="/setting" element={<PrivateRoute><Setting /></PrivateRoute>} />
+                <Route path="/RandomChat" element={<PrivateRoute><RandomChat /></PrivateRoute>} />
             </Routes>
         </div>
     );

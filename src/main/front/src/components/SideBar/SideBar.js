@@ -1,81 +1,53 @@
-import {Link, useNavigate} from "react-router-dom";
-import { FaHome, FaCommentAlt, FaList, FaUserCog, FaCreditCard, FaSignOutAlt, FaCoins } from 'react-icons/fa';
-import axios from "axios";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { FaCoins, FaHome, FaCommentAlt, FaList, FaUserCog, FaCreditCard, FaSignOutAlt } from 'react-icons/fa';
 
-const SideBar = () => {
-    const navigate = useNavigate();
-
-    const logout = async () => {
-        try {
-            axios.get('/api/auth/Logout', {
-                withCredentials: true
-            });
-            localStorage.removeItem('token');
-            window.location.reload();
-        } catch (error) {
-            console.error('로그아웃 오류', error);
-        }
-    };
-
-    const handleLogout = async () => {
-        try {
-            await logout();
-        } catch (error) {
-            alert('다시 시도해주세요.');
-        }
-    };
-    const user = {
-        name: '홍길동',
-        image: 'defaultIMG.png',
-        balance: 1250,
-    };
-
+const Sidebar = ({ user, logout }) => {
     return (
-        <div className="bg-gray-900 text-white p-6 flex flex-col justify-between w-64 md:w-48 sm:w-32">
+        <div className="fixed top-0 left-0 h-full bg-gray-900 text-white p-6 flex flex-col justify-between w-64 transition-all duration-300 ease-in-out transform lg:translate-x-0 -translate-x-full lg:w-64 md:w-56 sm:w-20 z-50">
             {/* 프로필 섹션 */}
-            <div className="flex flex-col items-center ">
+            <div className="flex flex-col items-center space-y-3">
                 <img
-                    src={user.image}
+                    src={user.image || 'defaultIMG.png'}
                     alt="Profile"
-                    className="w-40 h-40 rounded-full border-4 border-gray-700 mb-3"
+                    className="w-24 h-24 rounded-full border-4 border-gray-700 transition-all duration-300"
                 />
-                <h2 className="text-xl font-semibold">{user.name}</h2>
-                <div className="flex items-center text-lg font-medium">
-                    <FaCoins className="mr-2 text-yellow-500"/>
-                    <span>{user.balance} 골드</span>
+                <h2 className="text-xl font-semibold sm:hidden lg:block">{user.name}</h2>
+                <div className="flex items-center text-lg font-medium sm:hidden lg:flex">
+                    <FaCoins className="mr-2 text-yellow-500" />
+                    <span>{user.balance}</span>
                 </div>
             </div>
+
             {/* 네비게이션 링크 */}
-            <div>
-                <Link to="/" className="flex items-center mb-6 text-lg font-medium hover:text-gray-400">
-                <FaHome className="mr-2" />
-                    홈으로
-                </Link>
-                <Link to="/start-chat" className="flex items-center mb-6 text-lg font-medium hover:text-gray-400">
-                    <FaCommentAlt className="mr-2" />
-                    채팅 시작
-                </Link>
-                <Link to="/chat-history" className="flex items-center mb-6 text-lg font-medium hover:text-gray-400">
-                    <FaList className="mr-2" />
-                    채팅 목록
-                </Link>
-                <Link to="/settings" className="flex items-center mb-6 text-lg font-medium hover:text-gray-400">
-                    <FaUserCog className="mr-2" />
-                    설정
-                </Link>
-                <Link to="/purchase" className="flex items-center mb-6 text-lg font-medium hover:text-gray-400">
-                    <FaCreditCard className="mr-2" />
-                    충전
-                </Link>
-            </div>
+            <nav className="flex-grow my-8">
+                <NavLink to="/" icon={<FaHome />} label="홈으로" />
+                <NavLink to="/randomChat" icon={<FaCommentAlt />} label="채팅 시작" />
+                <NavLink to="/chat-history" icon={<FaList />} label="채팅 목록" />
+                <NavLink to="/setting" icon={<FaUserCog />} label="설정" />
+                <NavLink to="/purchase" icon={<FaCreditCard />} label="충전" />
+            </nav>
 
             {/* 로그아웃 버튼 */}
-            <button onClick={logout} className="flex items-center text-lg font-medium hover:text-gray-400">
+            <button
+                onClick={logout}
+                className="flex items-center justify-center w-full p-2 text-lg font-medium hover:bg-gray-800 rounded transition-colors duration-200"
+            >
                 <FaSignOutAlt className="mr-2" />
-                로그아웃
+                <span className="sm:hidden lg:inline">로그아웃</span>
             </button>
         </div>
     );
 };
 
-export default SideBar;
+const NavLink = ({ to, icon, label }) => (
+    <Link
+        to={to}
+        className="flex items-center mb-6 p-2 text-lg font-medium hover:bg-gray-800 rounded transition-colors duration-200"
+    >
+        {icon}
+        <span className="ml-2 sm:hidden lg:inline">{label}</span>
+    </Link>
+);
+
+export default Sidebar;

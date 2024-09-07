@@ -65,9 +65,5 @@ public class UserController {
         }
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<?> test(){
-        System.out.println("test");
-        return ResponseEntity.ok("hi");
-    }
+
 }
