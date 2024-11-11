@@ -52,10 +52,6 @@ const Main = () => {
         setCurrentIndex((prevIndex) => (prevIndex + 1) % popularUsers.length);
     };
 
-    const dummyLogout = () => {
-        console.log("Logout clicked");
-    };
-
     const getVisibleUsers = () => {
         const visibleUsers = [];
         for (let i = 0; i < Math.max(visibleCards, 2); i++) {
@@ -67,7 +63,7 @@ const Main = () => {
 
     return (
         <div className="flex flex-col lg:flex-row min-h-screen bg-gray-100">
-            <Sidebar user={dummyUser} logout={dummyLogout} />
+            <Sidebar user={dummyUser} />
 
             <main className="flex-1 p-4 lg:p-8 transition-all duration-300 lg:ml-64 md:ml-56 sm:ml-20">
                 <div className="bg-white shadow-lg rounded-lg p-4 sm:p-6">

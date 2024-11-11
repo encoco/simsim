@@ -1,10 +1,10 @@
 import React from 'react';
 import { Routes, Route, Navigate} from 'react-router-dom';
-import LoginPage from './pages/LoginPage';
-import SignUpPage from './pages/SignUpPage';
-import Main from './pages/Main';
-import Setting from './pages/Settings';
-import RandomChat from './pages/RandomChat';
+import LoginPage from './Pages/LoginPage';
+import SignUpPage from './Pages/SignUpPage';
+import Main from './Pages/Main';
+import Setting from './Pages/Settings';
+import RandomChat from './Pages/RandomChat';
 
 const PrivateRoute = ({ children }) => {
     const userInfo = localStorage.getItem('token');

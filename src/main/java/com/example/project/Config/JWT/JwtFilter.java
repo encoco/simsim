@@ -20,11 +20,9 @@ public class JwtFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        HttpServletResponse httpResponse = (HttpServletResponse) response;
-        HttpServletRequest httpRequest = (HttpServletRequest) request;
-        String requestURI = httpRequest.getRequestURI();
+        String requestURI = ((HttpServletRequest) request).getRequestURI();
         String refreshToken = null;
-        String accessToken = getTokenFromRequest(httpRequest);
+        String accessToken = getTokenFromRequest((HttpServletRequest) request);
 
         System.out.println("URI : " + requestURI);
         //기본 로그인,회원가입,이메일인증,로그아웃(/api/auth), 통신은 허용
@@ -34,8 +32,8 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         //쿠키중에 refreshToken 찾아서 저장
-        if (httpRequest.getCookies() != null) {
-            for (Cookie cookie : httpRequest.getCookies()) {
+        if (((HttpServletRequest) request).getCookies() != null) {
+            for (Cookie cookie : ((HttpServletRequest) request).getCookies()) {
                 if ("refreshToken".equals(cookie.getName())) {
                     refreshToken = cookie.getValue();
                     break;
@@ -46,12 +44,12 @@ public class JwtFilter extends OncePerRequestFilter {
         //refresh(access 만료, ref 유효 시 실행되는 요청)
         if (requestURI.startsWith("/api/refresh")) {
             if (refreshToken != null) {
-                httpRequest.setAttribute("refreshToken", refreshToken);
-                filterChain.doFilter(httpRequest, response);
+                ((HttpServletRequest) request).setAttribute("refreshToken", refreshToken);
+                filterChain.doFilter((HttpServletRequest) request, response);
             } else {
-                httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                httpResponse.setContentType("application/json");
-                httpResponse.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Token expired\"}");
+                ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                ((HttpServletResponse) response).setContentType("application/json");
+                ((HttpServletResponse) response).getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Token expired\"}");
             }
             return;
         }
@@ -60,18 +58,17 @@ public class JwtFilter extends OncePerRequestFilter {
         if (accessToken != null && !jwtUtil.isExpired(accessToken)) {
             filterChain.doFilter(request, response);
         } else {
-            httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            httpResponse.setContentType("application/json");
-            httpResponse.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Token expired\"}");
+            ((HttpServletResponse) response).setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            ((HttpServletResponse) response).setContentType("application/json");
+            ((HttpServletResponse) response).getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Token expired\"}");
         }
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
         String authorizationHeader = request.getHeader("Authorization");
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            String token = authorizationHeader.substring(7, authorizationHeader.length()); // "Bearer " 이후의 문자열을
             // 토큰으로 추출
-            return token;
+            return authorizationHeader.substring(7);
         }
         return null;
     }

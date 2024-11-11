@@ -20,7 +20,6 @@ public class UserEntity {
     String profile_img;
     String email;
     String password;
-
     @Builder.Default
     private String role = "USER";
 }

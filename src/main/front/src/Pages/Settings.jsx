@@ -44,7 +44,7 @@ function Settings() {
     return (
         <ThemeProvider theme={theme}>
             <Box sx={{ display: 'flex' }}>
-                <SideBar user={dummyUser} logout={() => console.log('로그아웃')} />
+                <SideBar user={dummyUser} />
                 <MainContent>
                     <Container maxWidth="sm">
                         <Typography variant="h4" component="h1" gutterBottom sx={{ mt: 4, mb: 4 }}>
