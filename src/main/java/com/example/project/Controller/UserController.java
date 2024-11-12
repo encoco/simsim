@@ -4,6 +4,7 @@ import com.example.project.Config.JWT.JwtUtil;
 import com.example.project.DTO.UserDTO;
 import com.example.project.Service.MailService;
 import com.example.project.Service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,6 +25,7 @@ public class UserController {
     @Value("${jwt.expirationTime.refresh}")
     private long refreshExpirationTime;
 
+    @Operation(summary = "이메일 중복 확인", description = "DB 이메일 중복 확인 API")
     @PostMapping("/auth/EmailCheck")
     public ResponseEntity<?> test(@RequestBody UserDTO user){
         if(userService.EmailCheck(user.getEmail())){
@@ -36,6 +38,7 @@ public class UserController {
         }
     }
 
+    @Operation(summary = "회원가입 요청", description = "회원가입 요청 API")
     @PostMapping("/auth/signUp")
     public ResponseEntity<?> signUp(@RequestBody UserDTO user){
         if(userService.signUp(user)){
@@ -44,6 +47,7 @@ public class UserController {
     }
 
 
+    @Operation(summary = "로그아웃", description = "로그아웃 API")
     @GetMapping("/auth/Logout")
     public ResponseEntity<?> logout(HttpServletResponse response) {
         System.out.println("Logout");
@@ -54,6 +58,7 @@ public class UserController {
         return new ResponseEntity<>("You've been logged out successfully.", HttpStatus.OK);
     }
 
+    @Operation(summary = "AccessToken 재발급", description = "AccessToken 재발금 API(RefreshToken 만료 시 요청 실패")
     @PostMapping("/refreshToken")
     public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         // 리프레시 토큰 검증 로직

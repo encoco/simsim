@@ -1,6 +1,7 @@
 package com.example.project.Controller;
 
 import com.example.project.DTO.ChatDTO;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -23,6 +24,7 @@ public class ChatController {
     private final Map<String, String> chatPairs = new ConcurrentHashMap<>();
 
     // 채팅 메시지 처리
+    @Operation(summary = "메세지 처리", description = "메세지 처리")
     @MessageMapping("/chat/message")
     public void message(ChatDTO message) {
         String receiver = chatPairs.get(message.getSender());
@@ -33,6 +35,7 @@ public class ChatController {
 
     // 랜덤 매칭 처리
     @MessageMapping("/chat/match")
+    @Operation(summary = "랜덤 채팅 매칭 ", description = "랜덤채팅 매칭 시작하는 API")
     public void match(String userId) {
         if (waitingQueue.contains(userId)) {
             return;
@@ -52,6 +55,7 @@ public class ChatController {
 
     // 채팅방 나가기 처리
     @MessageMapping("/chat/leave")
+    @Operation(summary = "채팅방 나가기", description = "채팅 나가기 API")
     public void leave(String userId) {
         String partner = chatPairs.remove(userId);
         if (partner != null) {

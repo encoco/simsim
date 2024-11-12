@@ -20,6 +20,11 @@ public class UserService {
         return repository.existsByEmail(email);
     }
 
+    /**
+     *
+     * @param user 회원가입 시 넘어오는 유저 DTO
+     * @return 회원가입 성공 시 T  //  실패 시 F
+     */
     @Transactional
     public boolean signUp(UserDTO user) {
         try{

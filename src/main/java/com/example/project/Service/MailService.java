@@ -1,5 +1,6 @@
 package com.example.project.Service;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
@@ -16,6 +17,11 @@ public class MailService {
     @Value("${spring.mail.username}")
     private String sender;
 
+    /**
+     *
+     * @param to 수신자
+     * @return verificationCode
+     */
     public String sendVerificationEmail(String to) {
         String verificationCode = generateVerificationCode();
 
