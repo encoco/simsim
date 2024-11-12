@@ -5,6 +5,7 @@ import com.example.project.DTO.UserDTO;
 import com.example.project.Service.MailService;
 import com.example.project.Service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
+@Tag(name = "Users", description = "회원 정보 관련 API")  // Swagger 문서화를 위한 태그
 public class UserController {
     private final UserService userService;
     private final MailService mailService;

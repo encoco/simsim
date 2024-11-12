@@ -25,8 +25,13 @@ public class JwtFilter extends OncePerRequestFilter {
         String accessToken = getTokenFromRequest((HttpServletRequest) request);
 
         System.out.println("URI : " + requestURI);
-        //기본 로그인,회원가입,이메일인증,로그아웃(/api/auth), 통신은 허용
-        if (requestURI.startsWith("/api/ws") || requestURI.startsWith("/api/auth/")) {
+        //기본 로그인,회원가입,이메일인증,로그아웃(/api/auth), 통신, Swagger 허용
+        if (requestURI.startsWith("/api/ws") ||
+                requestURI.startsWith("/api/auth/") ||
+                requestURI.startsWith("/swagger-ui") ||
+                requestURI.startsWith("/v3/api-docs") ||
+                requestURI.startsWith("/api-docs") ||
+                requestURI.equals("/swagger-ui.html")) {
             filterChain.doFilter(request, response);
             return;
         }
