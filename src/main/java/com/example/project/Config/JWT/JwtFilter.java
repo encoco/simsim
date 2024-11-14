@@ -28,6 +28,7 @@ public class JwtFilter extends OncePerRequestFilter {
         //기본 로그인,회원가입,이메일인증,로그아웃(/api/auth), 통신, Swagger 허용
         if (requestURI.startsWith("/api/ws") ||
                 requestURI.startsWith("/api/auth/") ||
+                requestURI.startsWith("/ws-stomp") ||
                 requestURI.startsWith("/swagger-ui") ||
                 requestURI.startsWith("/v3/api-docs") ||
                 requestURI.startsWith("/api-docs") ||

@@ -1,17 +1,14 @@
 package com.example.project.Controller;
 
+import com.example.project.Docs.ChatControllerDocs;
 import com.example.project.DTO.ChatDTO;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
@@ -21,39 +18,33 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/chat")
-@Tag(name = "Chat", description = "채팅 관련 API")
-public class ChatController {
+public class ChatController implements ChatControllerDocs {
     private final SimpMessagingTemplate messagingTemplate;
     private final Queue<String> waitingQueue = new ConcurrentLinkedQueue<>();
     private final Map<String, String> chatPairs = new ConcurrentHashMap<>();
+    private final Map<String, String> chatRooms = new ConcurrentHashMap<>(); // 채팅방 ID 저장
 
-    @MessageMapping("/chat/message")
-    @Operation(summary = "메시지 전송 (WebSocket)", description = "WebSocket을 통한 메시지 전송")
-    public void message(@Parameter(description = "채팅 메시지 정보") ChatDTO message) {
-        String receiver = chatPairs.get(message.getSender());
-        if (receiver != null) {
-            messagingTemplate.convertAndSend("/sub/chat/room/" + receiver, message);
+    @Override
+    @MessageMapping("/message")
+    public void message(ChatDTO message) {
+        String roomId = chatRooms.get(message.getSender());
+        if (roomId != null) {
+            // 채팅방 ID로 메시지 전송
+            messagingTemplate.convertAndSend("/sub/chat/room/" + roomId, message);
         }
     }
 
+    @Override
     @PostMapping("/message")
-    @Operation(summary = "채팅 메시지 전송", description = "채팅 메시지 전송")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "메시지 전송 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
-    public ResponseEntity<String> sendMessage(
-            @RequestBody
-            @Parameter(description = "채팅 메시지 정보")
-            ChatDTO message
-    ) {
+    public ResponseEntity<String> sendMessage(@RequestBody ChatDTO message) {
         message(message);
         return ResponseEntity.ok("Message sent");
     }
 
-    @MessageMapping("/chat/match")
-    @Operation(summary = "매칭 시작", description = "매칭 시작")
-    public void match(@Parameter(description = "매칭을 시작하는 사용자 ID", example = "user123") String userId) {
+    @Override
+    @MessageMapping("/match")
+    public void match(String userId) {
+        System.out.println("매칭 시작: " + userId);
         if (waitingQueue.contains(userId)) {
             return;
         }
@@ -61,63 +52,77 @@ public class ChatController {
         String partner = waitingQueue.poll();
         if (partner == null) {
             waitingQueue.offer(userId);
+            System.out.println("대기열에 추가: " + userId);
             messagingTemplate.convertAndSend("/sub/chat/match/" + userId, "매칭 대기 중");
         } else {
+            // 채팅방 ID 생성
+            String roomId = generateRoomId(userId, partner);
+
+            // 채팅방 ID 저장
+            chatRooms.put(userId, roomId);
+            chatRooms.put(partner, roomId);
+
+            // 사용자 페어 저장
             chatPairs.put(userId, partner);
             chatPairs.put(partner, userId);
-            messagingTemplate.convertAndSend("/sub/chat/match/" + userId, partner + "님과 매칭되었습니다");
-            messagingTemplate.convertAndSend("/sub/chat/match/" + partner, userId + "님과 매칭되었습니다");
+
+            System.out.println("매칭 성공 - Room: " + roomId + ", Users: " + userId + ", " + partner);
+
+            // 매칭 결과 전송 (채팅방 ID 포함)
+            Map<String, String> response1 = new HashMap<>();
+            response1.put("message", partner + "님과 매칭되었습니다");
+            response1.put("roomId", roomId);
+
+            Map<String, String> response2 = new HashMap<>();
+            response2.put("message", userId + "님과 매칭되었습니다");
+            response2.put("roomId", roomId);
+
+            messagingTemplate.convertAndSend("/sub/chat/match/" + userId, response1);
+            messagingTemplate.convertAndSend("/sub/chat/match/" + partner, response2);
         }
     }
 
+    @Override
     @PostMapping("/match")
-    @Operation(summary = "랜덤 채팅 매칭 시작 (HTTP)", description = "HTTP를 통한 랜덤 채팅 매칭 시작")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "매칭 시작 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")})
-    public ResponseEntity<String> startMatch(
-            @Parameter(description = "사용자 ID", example = "user123", required = true)
-            @RequestParam String userId) {
+    public ResponseEntity<String> startMatch(@RequestParam String userId) {
         match(userId);
         return ResponseEntity.ok("Matching started");
     }
 
-    @MessageMapping("/chat/leave")
-    @Operation(summary = "채팅방 나가기 (WebSocket)", description = "WebSocket을 통한 채팅방 나가기")
-    public void leave(
-            @Parameter(description = "채팅방을 나가는 사용자 ID", example = "user123")
-            String userId) {
+    @Override
+    @MessageMapping("/leave")
+    public void leave(String userId) {
         String partner = chatPairs.remove(userId);
+        String roomId = chatRooms.remove(userId);
+
         if (partner != null) {
             chatPairs.remove(partner);
+            chatRooms.remove(partner);
+            System.out.println("사용자 퇴장 - User: " + userId + ", Partner: " + partner + ", Room: " + roomId);
             messagingTemplate.convertAndSend("/sub/chat/match/" + partner, "상대방이 채팅방을 나갔습니다");
         }
         waitingQueue.remove(userId);
     }
 
+    @Override
     @PostMapping("/leave")
-    @Operation(summary = "채팅방 나가기 (HTTP)", description = "HTTP를 통한 채팅방 나가기")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "채팅방 나가기 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
-    public ResponseEntity<String> leaveChat(
-            @Parameter(description = "채팅방을 나가려는 사용자 ID", example = "user123", required = true)
-            @RequestParam String userId) {
+    public ResponseEntity<String> leaveChat(@RequestParam String userId) {
         leave(userId);
         return ResponseEntity.ok("Left chat room");
     }
 
+    @Override
     @GetMapping("/status")
-    @Operation(summary = "채팅 상태 조회", description = "현재 매칭 대기 및 채팅 중인 사용자 수 조회")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "상태 조회 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청")
-    })
     public ResponseEntity<Map<String, Integer>> getChatStatus() {
         Map<String, Integer> status = new HashMap<>();
         status.put("waitingUsers", waitingQueue.size());
         status.put("activeChats", chatPairs.size() / 2);
         return ResponseEntity.ok(status);
+    }
+
+    private String generateRoomId(String user1, String user2) {
+        String[] users = {user1, user2};
+        Arrays.sort(users); // 정렬하여 일관된 roomId 생성
+        return "room-" + users[0] + "-" + users[1];
     }
 }
