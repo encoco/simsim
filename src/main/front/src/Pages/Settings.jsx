@@ -6,6 +6,8 @@ import {
 import { PhotoCamera, Save, DeleteForever, Delete } from '@mui/icons-material';
 import SideBar from "../components/SideBar/SideBar";
 import {Input, MainContent, StyledButton, DeleteButton, theme} from '../Style/SettingStyle';
+import api from '../api';
+
 
 function Settings() {
     const [nickname, setNickname] = useState('');
@@ -29,6 +31,27 @@ function Settings() {
             reader.readAsDataURL(file);
         }
     };
+
+    const UpdateNickname = async () => {
+        if(nickname.length === 0){
+            console.log("빈칸 안댕");
+            return;
+        }
+        try {
+            const response = await api.get('/api/BGNick', {
+                params: {
+                    nickname: nickname,
+                    platform : 'steam'
+                },
+            });
+            console.log('Response:', response.data);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+        console.log(nickname);
+    }
+
+
 
     const handleRemoveProfileImage = () => {
         setProfileImage('defaultIMG.png');
@@ -87,7 +110,7 @@ function Settings() {
                             />
                             <StyledButton
                                 variant="contained"
-                                onClick={() => console.log('닉네임 변경:', nickname)}
+                                onClick={UpdateNickname}
                                 startIcon={<Save />}
                             >
                                 변경

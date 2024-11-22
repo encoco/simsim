@@ -21,8 +21,10 @@ const RandomChat = () => {
 
         const setupWebSocket = async () => {
             try {
+                setIsMatching(true);
+                setIsMatched(false);
                 await webSocketService.connect();
-                console.log('WebSocket connection established');
+                console.log('연결은 됐다 이자식아');
 
                 // 매칭 상태 구독
                 webSocketService.subscribe(`/sub/chat/match/${userId.current}`, (message) => {
@@ -58,8 +60,6 @@ const RandomChat = () => {
                         // 매칭 대기 중 처리
                         else if (status === '매칭 대기 중') {
                             console.log('매칭 대기 중');
-                            setIsMatching(true);
-                            setIsMatched(false);
                         }
                         // 상대방이 채팅방을 나갔을 때 처리
                         else if (status === '상대방이 채팅방을 나갔습니다') {

@@ -1,10 +1,11 @@
 import React from 'react';
 import {Link, useNavigate } from 'react-router-dom';
-import {FaCoins, FaHome, FaCommentAlt, FaList, FaUserCog, FaCreditCard, FaSignOutAlt} from 'react-icons/fa';
+import {FaCoins, FaHome, FaCommentAlt, FaList, FaUserCog, FaCreditCard, FaSignOutAlt, FaSignInAlt} from 'react-icons/fa';
 import axios from 'axios';
 
 const Sidebar = ({user}) => {
     const navigate = useNavigate();
+    const isLoggedIn = localStorage.getItem('token');
 
     const handleLogout = () => {
         try {
@@ -12,6 +13,7 @@ const Sidebar = ({user}) => {
                 withCredentials: true
             }).then(r => {
                 localStorage.removeItem('token');
+                alert("로그이웃 완료");
                 navigate('/');
             });
         } catch (error) {
@@ -46,13 +48,23 @@ const Sidebar = ({user}) => {
             </nav>
 
             {/* 로그아웃 버튼 */}
-            <button
-                onClick={handleLogout}
-                className="flex items-center justify-center w-full p-2 text-lg font-medium hover:bg-gray-800 rounded transition-colors duration-200"
-            >
-                <FaSignOutAlt className="mr-2"/>
-                <span className="sm:hidden lg:inline">로그아웃</span>
-            </button>
+            {isLoggedIn ? (
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center justify-center w-full p-2 text-lg font-medium hover:bg-gray-800 rounded transition-colors duration-200"
+                >
+                    <FaSignOutAlt className="mr-2"/>
+                    <span className="sm:hidden lg:inline">로그아웃</span>
+                </button>
+            ) : (
+                <Link
+                    to="/login"
+                    className="flex items-center justify-center w-full p-2 text-lg font-medium hover:bg-gray-800 rounded transition-colors duration-200"
+                >
+                    <FaSignInAlt className="mr-2"/>
+                    <span className="sm:hidden lg:inline">로그인</span>
+                </Link>
+            )}
         </div>
     );
 };

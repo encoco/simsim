@@ -2,131 +2,115 @@ import SockJS from 'sockjs-client';
 import { Client } from '@stomp/stompjs';
 
 class WebSocketService {
-    constructor() {
-        if (WebSocketService.instance) {
-            return WebSocketService.instance;
-        }
-        WebSocketService.instance = this;
+    client;
+    connected = false;
 
-        this.stompClient = null;
-        this.subscriptions = new Map();
-        this.connected = false;
+    constructor() {
+        this.client = new Client({
+            brokerURL: null, // 직접 SockJS를 사용하므로 brokerURL 사용 안 함
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
+            debug: (str) => {
+                console.debug('STOMP debug:', str);
+            },
+        });
     }
 
-    connect() {
+    /**
+     * 동기식 연결 메서드
+     */
+    async connect() {
+        if (this.connected) {
+            console.warn('이미 WebSocket에 연결됨');
+            return;
+        }
+
+        const socket = new SockJS('/ws-stomp'); // SockJS 경로 설정
+
+        this.client.webSocketFactory = () => socket;
+
         return new Promise((resolve, reject) => {
+            this.client.onConnect = () => {
+                this.connected = true;
+                console.log('WebSocket 연결 성공');
+                resolve();
+            };
+
+            this.client.onStompError = (frame) => {
+                this.connected = false;
+                console.error('STOMP Error:', frame.body);
+                reject(new Error('STOMP Error: ' + frame.body));
+            };
+
+            this.client.onDisconnect = () => {
+                this.connected = false;
+                console.warn('WebSocket 연결 해제');
+            };
+
             try {
-                const socket = new SockJS('https://localhost:8443/ws-stomp');
-
-                this.stompClient = new Client({
-                    webSocketFactory: () => socket,
-                    debug: (str) => {
-                    },
-                    reconnectDelay: 5000,
-                    heartbeatIncoming: 4000,
-                    heartbeatOutgoing: 4000
-                });
-
-                this.stompClient.onConnect = () => {
-                    this.connected = true;
-                    console.log('WebSocket 연결 성공');
-                    resolve();
-                };
-
-                this.stompClient.onStompError = (frame) => {
-                    this.connected = false;
-                    reject(new Error('STOMP error ' + frame.body));
-                };
-
-                this.stompClient.activate();
-
+                this.client.activate();
             } catch (error) {
+                console.error('WebSocket 활성화 오류:', error);
                 reject(error);
             }
         });
     }
 
-    subscribe = (destination, callback) => {
-        if (!this.stompClient || !this.connected) {
-            return null;
+    /**
+     * 대상에 구독
+     * @param {string} destination - 구독할 STOMP 경로
+     * @param {function} callback - 메시지 수신 콜백
+     */
+    subscribe(destination, callback) {
+        if (!this.connected) {
+            console.warn('WebSocket 연결되지 않음. 구독 불가능:', destination);
+            return;
         }
 
-        try {
-            console.log('Subscribing to:', destination);
-            const subscription = this.stompClient.subscribe(destination, (message) => {
-                try {
-                    // body가 있으면 파싱 시도
-                    if (message.body) {
-                        const parsedBody = JSON.parse(message.body);
-                        callback(parsedBody);
-                    } else {
-                        // body가 없으면 원본 메시지 전달
-                        callback(message);
-                    }
-                } catch (error) {
-                    console.log('Message is not JSON, using raw body');
-                    callback(message.body);
-                }
-            });
-            this.subscriptions.set(destination, subscription);
-            return subscription;
-        } catch (error) {
-            console.error('Subscription failed:', error);
-            return null;
-        }
-    };
+        this.client.subscribe(destination, (message) => {
+            try {
+                const parsedMessage = JSON.parse(message.body);
+                callback(parsedMessage);
+            } catch (error) {
+                console.error('메시지 파싱 오류:', error, message.body);
+            }
+        });
+    }
 
-    send(destination, headers = {}, body = {}) {
-        if (!this.stompClient || !this.connected) {
-            console.warn('WebSocket이 연결되지 않았습니다.');
+    /**
+     * 메시지 전송
+     * @param {string} destination - 전송할 STOMP 경로
+     * @param {object} body - 전송할 데이터
+     */
+    send(destination, body) {
+        if (!this.connected) {
+            console.warn('WebSocket 연결되지 않음. 메시지 전송 불가능:', destination);
             return;
         }
 
         try {
-            this.stompClient.publish({
-                destination: destination,
-                headers: headers,
-                body: JSON.stringify(body)
+            this.client.publish({
+                destination,
+                body: JSON.stringify(body),
             });
         } catch (error) {
-            console.error('메시지 전송 실패:', error);
+            console.error('메시지 전송 오류:', error);
         }
     }
 
     disconnect() {
-        if (this.stompClient) {
+        if (this.connected && this.client) {
             try {
-                this.subscriptions.forEach(subscription => {
-                    if (subscription) subscription.unsubscribe();
-                });
-                this.subscriptions.clear();
-                this.stompClient.deactivate();
+                this.client.deactivate(); // STOMP 클라이언트 비활성화
                 this.connected = false;
-                console.log('WebSocket 연결이 종료되었습니다.');
+                console.log('WebSocket 연결 해제');
             } catch (error) {
-                console.error('WebSocket 연결 종료 실패:', error);
+                console.error('WebSocket 연결 해제 중 오류:', error);
             }
         }
-    }
-
-    unsubscribe(destination) {
-        if (this.subscriptions.has(destination)) {
-            try {
-                const subscription = this.subscriptions.get(destination);
-                if (subscription) {
-                    subscription.unsubscribe();
-                    this.subscriptions.delete(destination);
-                }
-            } catch (error) {
-                console.error('구독 해제 실패:', error);
-            }
-        }
-    }
-
-    isConnected() {
-        return this.connected;
     }
 }
 
-const webSocketService = new WebSocketService();
+export const webSocketService = new WebSocketService();
 export default webSocketService;

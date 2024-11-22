@@ -16,7 +16,7 @@ function LoginPage() {
         axios.post('/api/auth/login', params)
             .then(response => {
                 localStorage.setItem('token',response.data);
-                navigate('/main');
+                navigate('/');
             })
 
             .catch(error => {

@@ -54,7 +54,6 @@ api.interceptors.response.use(
 
             try {
                 const { data } = await axios.post('/api/refreshToken', {}, { withCredentials: true });
-                console.log("response data : ", data);
                 localStorage.setItem('token', data);
                 onRrefreshed(data);
                 originalRequest.headers['Authorization'] = `Bearer ${data}`;
