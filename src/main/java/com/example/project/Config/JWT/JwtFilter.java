@@ -26,8 +26,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
         System.out.println("URI : " + requestURI);
         //기본 로그인,회원가입,이메일인증,로그아웃(/api/auth), 통신, Swagger 허용
-        if (requestURI.startsWith("/api/ws") ||
-                requestURI.startsWith("/api/auth/") ||
+        if (    requestURI.startsWith("/api/auth/") ||
                 requestURI.startsWith("/ws-stomp") ||
                 requestURI.startsWith("/swagger-ui") ||
                 requestURI.startsWith("/v3/api-docs") ||
@@ -36,7 +35,6 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
         //쿠키중에 refreshToken 찾아서 저장
         if (((HttpServletRequest) request).getCookies() != null) {
             for (Cookie cookie : ((HttpServletRequest) request).getCookies()) {
@@ -46,7 +44,6 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             }
         } else System.out.println("cookies is null sibal");
-
         //refresh(access 만료, ref 유효 시 실행되는 요청)
         if (requestURI.startsWith("/api/refresh")) {
             if (refreshToken != null) {
@@ -59,7 +56,6 @@ public class JwtFilter extends OncePerRequestFilter {
             }
             return;
         }
-
         //access토큰 유효 시 원래 요청 실행
         if (accessToken != null && !jwtUtil.isExpired(accessToken)) {
             filterChain.doFilter(request, response);

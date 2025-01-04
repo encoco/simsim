@@ -1,13 +1,12 @@
-package com.example.project.DTO;
+package com.example.project.DTO.PUBG;
 
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 
-@Getter
+@Data
 @Builder
 public class PlayerStats {
-    private String accountId;
-    private String nickname;
-    private double kda;
-    private double damageDealt;
+    private double kda;          // K/D 비율
+    private double averageDamage;  // 평균 딜량
+    private double headshotRatio;  // 헤드샷 비율 (%)
 }

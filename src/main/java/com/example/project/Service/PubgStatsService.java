@@ -7,11 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 //PubgStatsService
 @Service
-public class PlayerStatService {
+public class PubgStatsService {
 
     @Value("${pubg.api.key}")
     private String apiKey;
@@ -70,16 +71,22 @@ public class PlayerStatService {
         // 현재 시즌 찾기 (가장 최근 시즌)
         java.util.List<Map> seasons = (java.util.List<Map>) response.getBody().get("data");
         Optional<Map> currentSeason = seasons.stream()
-                .filter(season -> (Boolean) season.get("attributes.isCurrentSeason"))
+                .filter(season -> {
+                    Map attributes = (Map) season.get("attributes");
+                    return Boolean.TRUE.equals(attributes.get("isCurrentSeason"));
+                })
                 .findFirst();
 
-        return (String) currentSeason.get().get("id");
+        return currentSeason.map(season -> (String) season.get("id"))
+                .orElseThrow(() -> new RuntimeException("Current season not found"));
     }
+
+
 
     private PlayerStats getSeasonStats(String playerId, String seasonId, String platform) {
         String url = UriComponentsBuilder
                 .fromHttpUrl(BASE_URL)
-                .path("/shards/{platform}/players/{playerId}/seasons/{seasonId}")
+                .path("/shards/{platform}/players/{playerId}/seasons/{seasonId}/ranked")  // 엔드포인트 변경
                 .buildAndExpand(platform, playerId, seasonId)
                 .toUriString();
 
@@ -93,17 +100,37 @@ public class PlayerStatService {
         );
 
         Map statsData = (Map) ((Map) response.getBody().get("data")).get("attributes");
-        Map gameModeStats = (Map) statsData.get("gameModeStats");
+        Map gameModeStats = (Map) statsData.get("rankedGameModeStats");  // rankedGameModeStats로 변경
+        Map squadStats = (Map) gameModeStats.get("squad");  // 다시 squad로 변경
 
-        // squad-fpp 모드의 스탯을 예시로 가져옴 (다른 모드도 필요하다면 추가 가능)
-        Map squadFppStats = (Map) gameModeStats.get("squad-fpp");
+        double kda = getDoubleValue(squadStats, "kda");
+        double damageDealt = getDoubleValue(squadStats, "damageDealt");
+        int roundsPlayed = getIntValue(squadStats, "roundsPlayed");
+        double headshotKillRatio = getDoubleValue(squadStats, "headshotKillRatio");
+
+        // 평균 딜량 계산
+        double averageDamage = roundsPlayed > 0 ? damageDealt / roundsPlayed : 0;
 
         return PlayerStats.builder()
-                .kills((Integer) squadFppStats.get("kills"))
-                .deaths((Integer) squadFppStats.get("losses"))  // deaths는 losses로 표시됨
-                .damageDealt((Double) squadFppStats.get("damageDealt"))
+                .kda(Math.round(kda * 100) / 100.0)           // 소수점 2자리까지 반올림
+                .averageDamage(Math.ceil(averageDamage))      // 딜량은 올림
+                .headshotRatio(Math.round(headshotKillRatio * 100) / 100.0)  // 소수점 2자리까지 반올림
                 .build();
     }
+
+    // 헬퍼 메서드들
+    private int getIntValue(Map stats, String key) {
+        Number value = (Number) stats.get(key);
+        return value != null ? value.intValue() : 0;
+    }
+
+    private double getDoubleValue(Map stats, String key) {
+        Number value = (Number) stats.get(key);
+        return value != null ? value.doubleValue() : 0.0;
+    }
+
+
+
 
     private HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
